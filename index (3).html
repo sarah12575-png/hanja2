@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한자어 퀴즈 · 초등 3~4학년</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1208;
+    --paper: #fdf8f0;
+    --paper2: #f5eddc;
+    --accent: #c8401a;
+    --accent2: #2e6b3e;
+    --muted: #7a6a52;
+    --border: #d8cbb8;
+    --correct-bg: #eaf5ec;
+    --correct: #2e6b3e;
+    --wrong-bg: #fdecea;
+    --wrong: #b52a1a;
+    --shadow: 0 2px 12px rgba(30,16,0,0.10);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 2rem 1.5rem 1.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent 0px, transparent 28px,
+      rgba(255,255,255,0.04) 28px, rgba(255,255,255,0.04) 30px
+    );
+  }
+  .header-tag {
+    display: inline-block;
+    font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 3px 10px; border-radius: 2px;
+    margin-bottom: 10px; color: rgba(255,255,255,0.6);
+    position: relative;
+  }
+  header h1 {
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    position: relative;
+    line-height: 1.2;
+  }
+  header h1 span { color: #f5a623; }
+  header p {
+    font-size: 13px; color: rgba(255,255,255,0.55);
+    margin-top: 6px; position: relative;
+  }
+
+  /* ── CONTROLS ── */
+  .controls {
+    background: var(--paper2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 1rem;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    justify-content: center;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .controls select, .controls input[type=text] {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+    background: var(--paper);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .controls select:focus, .controls input:focus { border-color: var(--accent); }
+  .controls input[type=text] { width: 160px; }
+  .btn {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px; font-weight: 500;
+    border: 1px solid var(--border);
+    border-radius: 4px; padding: 6px 14px;
+    background: var(--paper); color: var(--ink);
+    cursor: pointer; transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.primary:hover { background: #a33214; }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: flex; justify-content: center; gap: 20px;
+    padding: 10px 1rem;
+    font-size: 12px; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    flex-wrap: wrap;
+  }
+  .stats-bar strong { color: var(--ink); font-weight: 700; }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  /* ── QUIZ CARD ── */
+  .quiz-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.75rem 1.5rem 1.5rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+    animation: fadeUp 0.28s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .card-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1rem;
+    font-size: 11px; color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+  .cat-badge {
+    background: var(--paper2);
+    border: 1px solid var(--border);
+    border-radius: 3px; padding: 2px 8px;
+    font-size: 11px; color: var(--muted);
+  }
+  .word-display {
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: clamp(2rem, 8vw, 3rem);
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: 0.04em;
+    padding: 0.5rem 0 1.2rem;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .choices {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin-bottom: 1rem;
+  }
+  @media (max-width: 420px) { .choices { grid-template-columns: 1fr; } }
+  .choice-btn {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px; font-weight: 500;
+    padding: 12px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    background: var(--paper);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .choice-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: #fff5f0;
+  }
+  .choice-btn.correct {
+    background: var(--correct-bg);
+    border-color: var(--correct);
+    color: var(--correct);
+    font-weight: 700;
+  }
+  .choice-btn.wrong {
+    background: var(--wrong-bg);
+    border-color: var(--wrong);
+    color: var(--wrong);
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+  .choice-btn:disabled { cursor: default; }
+  .example-box {
+    display: none;
+    background: var(--paper2);
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    font-size: 13px; color: var(--muted);
+    margin-top: 2px;
+    line-height: 1.7;
+  }
+  .example-box strong { color: var(--accent2); }
+  .example-box.visible { display: block; animation: fadeUp 0.2s ease; }
+
+  /* ── BROWSE TABLE (data view) ── */
+  #browseView { display: none; }
+  .data-table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  th {
+    background: var(--ink);
+    color: var(--paper);
+    font-weight: 500;
+    padding: 8px 12px;
+    text-align: left;
+    white-space: nowrap;
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  tr:hover td { background: var(--paper2); }
+  tr:nth-child(even) td { background: #faf6ef; }
+  tr:nth-child(even):hover td { background: var(--paper2); }
+  td.word-cell {
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: 17px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--paper2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ── SCORE / MODAL ── */
+  #scoreModal {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(26,18,8,0.55);
+    z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  #scoreModal.open { display: flex; }
+  .score-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 2rem 2.5rem;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    max-width: 320px; width: 90%;
+  }
+  .score-card .big { font-size: 3rem; font-weight: 800; font-family: 'Nanum Myeongjo', serif; }
+  .score-card p { font-size: 14px; color: var(--muted); margin: 6px 0 1.2rem; }
+
+  /* ── EMPTY / LOAD STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+  }
+  .empty-state .big-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .empty-state h2 { font-family: 'Nanum Myeongjo', serif; font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--ink); }
+  .empty-state p { font-size: 14px; line-height: 1.7; }
+
+  /* ── PAGINATION ── */
+  .pagination {
+    display: flex; justify-content: center; gap: 6px;
+    margin-top: 1.5rem; flex-wrap: wrap;
+  }
+  .page-btn {
+    font-size: 12px; padding: 4px 10px;
+    border: 1px solid var(--border); border-radius: 4px;
+    background: var(--paper); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .page-btn:hover, .page-btn.active {
+    background: var(--ink); color: var(--paper); border-color: var(--ink);
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  /* ── IMPORT NOTICE ── */
+  .import-box {
+    background: #fff;
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .import-box:hover { border-color: var(--accent); }
+  .import-box input { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-tag">초등 3~4학년</div>
+  <h1>한자어 <span>퀴즈</span></h1>
+  <p>일상에서 헷갈리는 한자어를 재미있게 익혀요</p>
+</header>
+
+<div class="controls">
+  <select id="catFilter" onchange="applyFilter()">
+    <option value="">전체 카테고리</option>
+  </select>
+  <input type="text" id="searchInput" placeholder="단어 검색..." oninput="applyFilter()">
+  <button class="btn" onclick="setView('quiz')">퀴즈 모드</button>
+  <button class="btn" onclick="setView('browse')">전체 보기</button>
+
+</div>
+
+<div class="stats-bar" id="statsBar">
+  <span>단어 <strong id="statTotal">0</strong>개</span>
+  <span>카테고리 <strong id="statCat">0</strong>개</span>
+  <span>퀴즈 정답률 <strong id="statScore">-</strong></span>
+  <span id="statFilter"></span>
+</div>
+
+<main>
+
+  <!-- QUIZ VIEW -->
+  <div id="quizView">
+    <div id="loadingState" class="empty-state">
+      <div class="big-icon" style="font-size:2rem;animation:spin 1s linear infinite;display:inline-block;">⏳</div>
+      <h2>문제를 불러오는 중...</h2>
+      <p style="font-size:13px;color:var(--muted);">잠깐만 기다려 주세요!</p>
+    </div>
+    <div id="errorState" class="empty-state" style="display:none;">
+      <div class="big-icon">⚠️</div>
+      <h2>데이터를 불러올 수 없어요</h2>
+      <p id="errorMsg" style="font-size:13px;color:var(--muted);"></p>
+      <p style="font-size:12px;color:#bbb;margin-top:8px;">저장소에 <code>data/hanja_quiz.json</code> 파일이 있는지 확인해 주세요.</p>
+    </div>
+    <div id="quizCards"></div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <!-- BROWSE VIEW -->
+  <div id="browseView">
+    <div class="data-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>단어</th><th>카테고리</th><th>정답 뜻</th><th>오답 1</th><th>오답 2</th><th>예문</th>
+          </tr>
+        </thead>
+        <tbody id="browseBody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination2"></div>
+  </div>
+
+</main>
+
+<!-- SCORE MODAL -->
+<div id="scoreModal">
+  <div class="score-card">
+    <div class="big" id="scoreEmoji">🎉</div>
+    <div class="big" id="scoreText">—</div>
+    <p id="scoreDesc"></p>
+    <button class="btn primary" onclick="nextQuizBatch()">다음 문제 →</button>
+    <button class="btn" onclick="document.getElementById('scoreModal').classList.remove('open')" style="margin-top:6px;width:100%;">닫기</button>
+  </div>
+</div>
+
+<script>
+let allWords = [];
+let filtered = [];
+let currentView = 'quiz';
+let quizPage = 0;
+const QUIZ_PER_PAGE = 10;
+const BROWSE_PER_PAGE = 50;
+let browsePage = 0;
+let quizState = {};  // id -> {answered, correct}
+let totalCorrect = 0, totalAnswered = 0;
+
+/* ── JSON LOAD ── */
+function loadJSON(evt) {
+  const file = (evt.target.files || evt.dataTransfer.files)[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      allWords = parsed.data || parsed;
+      if (!Array.isArray(allWords)) throw new Error('data 배열 없음');
+      quizState = {}; totalCorrect = 0; totalAnswered = 0;
+      buildCatFilter();
+      applyFilter();
+      updateStats();
+    } catch(err) {
+      alert('JSON 파싱 오류: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function buildCatFilter() {
+  const cats = [...new Set(allWords.map(w => w.category))].sort();
+  const sel = document.getElementById('catFilter');
+  sel.innerHTML = '<option value="">전체 카테고리</option>';
+  cats.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    sel.appendChild(o);
+  });
+  document.getElementById('statCat').textContent = cats.length;
+}
+
+function applyFilter() {
+  const cat = document.getElementById('catFilter').value;
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  filtered = allWords.filter(w =>
+    (!cat || w.category === cat) &&
+    (!q || w.word.includes(q) || w.answer.includes(q))
+  );
+  quizPage = 0; browsePage = 0;
+  updateStats();
+  render();
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = allWords.length;
+  const rate = totalAnswered > 0 ? Math.round(totalCorrect/totalAnswered*100) + '%' : '-';
+  document.getElementById('statScore').textContent = rate;
+  const f = document.getElementById('statFilter');
+  f.textContent = filtered.length < allWords.length ? `(필터: ${filtered.length}개)` : '';
+}
+
+/* ── VIEW SWITCH ── */
+function setView(v) {
+  currentView = v;
+  document.getElementById('quizView').style.display = v === 'quiz' ? '' : 'none';
+  document.getElementById('browseView').style.display = v === 'browse' ? '' : 'none';
+  render();
+}
+
+function render() {
+  if (currentView === 'quiz') renderQuiz();
+  else renderBrowse();
+}
+
+/* ── QUIZ RENDER ── */
+function renderQuiz() {
+  const container = document.getElementById('quizCards');
+  if (filtered.length === 0) { container.innerHTML = ''; renderPagination(0, 0, 'pagination', () => {}); return; }
+
+  const start = quizPage * QUIZ_PER_PAGE;
+  const pageWords = filtered.slice(start, start + QUIZ_PER_PAGE);
+
+  container.innerHTML = '';
+  pageWords.forEach(w => {
+    const choices = makeChoices(w, allWords);
+    const card = document.createElement('div');
+    card.className = 'quiz-card';
+    card.dataset.id = w.id;
+    const state = quizState[w.id];
+
+    card.innerHTML = `
+      <div class="card-meta">
+        <span class="cat-badge">${w.category}</span>
+        <span>#${w.id}</span>
+      </div>
+      <div class="word-display">${w.word}</div>
+      <div class="choices" id="choices-${w.id}">
+        ${choices.map((c, i) => {
+          let cls = 'choice-btn';
+          if (state) {
+            if (c === w.answer) cls += ' correct';
+            else if (c === state.chosen) cls += ' wrong';
+          }
+          return `<button class="${cls}" onclick="answer(${w.id}, '${escQ(c)}')" ${state ? 'disabled' : ''}>${c}</button>`;
+        }).join('')}
+      </div>
+      <div class="example-box ${state ? 'visible' : ''}" id="ex-${w.id}">
+        <strong>예문</strong>: ${w.example}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  const totalPages = Math.ceil(filtered.length / QUIZ_PER_PAGE);
+  renderPagination(quizPage, totalPages, 'pagination', p => { quizPage = p; renderQuiz(); });
+}
+
+function escQ(s) { return s.replace(/'/g, "\\'"); }
+
+function makeChoices(word, pool) {
+  const wrongs = [word.wrong1, word.wrong2];
+  const choices = [word.answer, ...wrongs].sort(() => Math.random() - 0.5);
+  return choices;
+}
+
+function answer(id, chosen) {
+  const word = allWords.find(w => w.id === id);
+  if (!word || quizState[id]) return;
+  const correct = chosen === word.answer;
+  quizState[id] = { chosen, correct };
+  totalAnswered++;
+  if (correct) totalCorrect++;
+  updateStats();
+
+  const choicesEl = document.getElementById('choices-' + id);
+  choicesEl.querySelectorAll('.choice-btn').forEach(btn => {
+    btn.disabled = true;
+    if (btn.textContent.trim() === word.answer) btn.classList.add('correct');
+    else if (btn.textContent.trim() === chosen) btn.classList.add('wrong');
+  });
+  const ex = document.getElementById('ex-' + id);
+  ex.classList.add('visible');
+
+  // Check if batch done
+  const start = quizPage * QUIZ_PER_PAGE;
+  const pageIds = filtered.slice(start, start + QUIZ_PER_PAGE).map(w => w.id);
+  const donePage = pageIds.every(id => quizState[id]);
+  if (donePage) {
+    const pageCorrect = pageIds.filter(id => quizState[id]?.correct).length;
+    setTimeout(() => showScore(pageCorrect, pageIds.length), 500);
+  }
+}
+
+function showScore(correct, total) {
+  const pct = Math.round(correct / total * 100);
+  const emoji = pct >= 80 ? '🎉' : pct >= 60 ? '😊' : '💪';
+  document.getElementById('scoreEmoji').textContent = emoji;
+  document.getElementById('scoreText').textContent = `${correct} / ${total}`;
+  document.getElementById('scoreDesc').textContent = `정답률 ${pct}% · ${pct >= 80 ? '훌륭해요!' : pct >= 60 ? '잘 했어요!' : '조금 더 연습해봐요!'}`;
+  document.getElementById('scoreModal').classList.add('open');
+}
+
+function nextQuizBatch() {
+  document.getElementById('scoreModal').classList.remove('open');
+  const totalPages = Math.ceil(filtered.length / QUIZ_PER_PAGE);
+  if (quizPage + 1 < totalPages) { quizPage++; renderQuiz(); }
+  else { alert('모든 문제를 다 풀었어요! 🎊'); }
+}
+
+/* ── BROWSE RENDER ── */
+function renderBrowse() {
+  const start = browsePage * BROWSE_PER_PAGE;
+  const page = filtered.slice(start, start + BROWSE_PER_PAGE);
+  const tbody = document.getElementById('browseBody');
+  tbody.innerHTML = page.map((w, i) => `
+    <tr>
+      <td style="color:var(--muted);font-size:12px;">${start+i+1}</td>
+      <td class="word-cell">${w.word}</td>
+      <td><span class="badge">${w.category}</span></td>
+      <td style="color:var(--correct);font-weight:500;">${w.answer}</td>
+      <td style="color:var(--muted);">${w.wrong1}</td>
+      <td style="color:var(--muted);">${w.wrong2}</td>
+      <td style="font-size:12px;color:#888;">${w.example}</td>
+    </tr>
+  `).join('');
+  const totalPages = Math.ceil(filtered.length / BROWSE_PER_PAGE);
+  renderPagination(browsePage, totalPages, 'pagination2', p => { browsePage = p; renderBrowse(); });
+}
+
+/* ── PAGINATION ── */
+function renderPagination(current, total, elId, cb) {
+  const el = document.getElementById(elId);
+  if (total <= 1) { el.innerHTML = ''; return; }
+  const pages = [];
+  const range = 2;
+  for (let i = 0; i < total; i++) {
+    if (i === 0 || i === total-1 || Math.abs(i - current) <= range) pages.push(i);
+    else if (pages[pages.length-1] !== '…') pages.push('…');
+  }
+  el.innerHTML = pages.map(p =>
+    p === '…' ? `<span class="page-btn" style="cursor:default;">…</span>`
+    : `<button class="page-btn ${p === current ? 'active' : ''}" onclick="(${cb.toString()})(${p})">${p+1}</button>`
+  ).join('');
+}
+
+/* ── AUTO LOAD from data/hanja_quiz.json ── */
+window.addEventListener('DOMContentLoaded', () => {
+  const loading = document.getElementById('loadingState');
+  const error   = document.getElementById('errorState');
+  fetch('data/hanja_quiz.json')
+    .then(r => {
+      if (!r.ok) throw new Error('파일을 찾을 수 없어요 (HTTP ' + r.status + ')');
+      return r.json();
+    })
+    .then(parsed => {
+      allWords = parsed.data || parsed;
+      if (!Array.isArray(allWords) || allWords.length === 0) throw new Error('데이터가 비어 있어요');
+      loading.style.display = 'none';
+      buildCatFilter();
+      applyFilter();
+      updateStats();
+    })
+    .catch(err => {
+      loading.style.display = 'none';
+      error.style.display = 'block';
+      document.getElementById('errorMsg').textContent = err.message;
+    });
+});
+</script>
+</body>
+</html>
